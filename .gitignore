@@ -1,0 +1,5 @@
+.stack-work/
+philips-hue.cabal
+*~
+username
+.haskell-ghc-mod.json
