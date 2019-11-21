@@ -55,9 +55,9 @@ getGroupAPI ip username groupID =
 
 -- Set group state
 
-setGroupStateAPI :: IPAddress -> Username -> ResourceID -> Value -> IO [ApiResponse Value]
+setGroupStateAPI :: IPAddress -> Username -> ResourceID -> LightStateParam -> IO [ApiResponse Value]
 setGroupStateAPI ip username groupID =
-  putAPI (authApiURL ip username ++ "/groups/" ++ groupID ++ "/action")
+  putAPI (authApiURL ip username ++ "/groups/" ++ groupID ++ "/action") . object . unLightState
 
 setScene :: String -> Pair
 setScene = ("scene" .=)

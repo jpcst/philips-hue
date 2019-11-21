@@ -4,6 +4,7 @@ module LightState where
 
 import           Data.Aeson.Types
 import           GHC.Generics
+import           System.Random
 
 import           Api
 import           Types
@@ -23,6 +24,9 @@ data LightState = LightState {
 } deriving (Show, Generic)
 
 instance FromJSON LightState
+
+-- A JSON value that can be used to specify a light state
+newtype LightStateParam = LightStateParam {unLightState :: [Pair]}
 
 setOn :: Bool -> Pair
 setOn = ("on" .=)
@@ -63,11 +67,19 @@ setHueInc = ("hue_inc" .=)
 setCTInc :: Int -> Pair
 setCTInc = ("ct_inc" .=)
 
-setXYInc :: Int -> Pair
+setXYInc :: (Double, Double) -> Pair
 setXYInc = ("xy_inc" .=)
 
 -- Set light state
 
-setLightStateAPI :: IPAddress -> Username -> ResourceID -> Value -> IO [ApiResponse Value]
+setLightStateAPI :: IPAddress -> Username -> ResourceID -> LightStateParam -> IO [ApiResponse Value]
 setLightStateAPI ip username lightID =
-  putAPI (authApiURL ip username ++ "/lights/" ++ lightID ++ "/state")
+  putAPI (authApiURL ip username ++ "/lights/" ++ lightID ++ "/state") . object . unLightState
+
+instance Random LightStateParam where
+  randomR _ = random
+  random g = (LightStateParam value, g''')
+    where value = [setBri bri', setHue hue', setSat sat']
+          (bri', g') = randomR (0, 254) g
+          (hue', g'') = randomR (0, 65535) g'
+          (sat', g''') = randomR (0, 254) g''

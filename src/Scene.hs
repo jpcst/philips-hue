@@ -10,6 +10,7 @@ import           GHC.Generics
 
 import           Api
 import           Group               hiding (name)
+import           LightState
 import           Parsers
 import           Types
 
@@ -62,19 +63,25 @@ getSceneAPI ip username sceneID =
 -- Recall scene
 
 recallScene :: IPAddress -> Username -> ResourceID -> IO ()
-recallScene ip username sceneID = do
-  response <- setGroupStateAPI ip username allLights (object [setScene sceneID])
+recallScene ip username = recallSceneForGroup ip username allLights
+
+recallSceneForGroup :: IPAddress -> Username -> ResourceID -> ResourceID -> IO ()
+recallSceneForGroup ip username groupID sceneID = do
+  response <- setGroupStateAPI ip username groupID (LightStateParam [setScene sceneID])
   case response of
     [ApiError 7 _ desc] -> putStrLn desc
     _ -> return ()
 
 recallSceneByName :: IPAddress -> Username -> String -> IO ()
-recallSceneByName ip username sceneName = do
+recallSceneByName ip username = recallSceneByNameForGroup ip username allLights
+
+recallSceneByNameForGroup :: IPAddress -> Username -> ResourceID -> String -> IO ()
+recallSceneByNameForGroup ip username groupID sceneName  = do
   scenes <- getScenesAPI ip username
   let sceneIDs = [ sceneID | (sceneID, scene) <- HM.toList scenes,
                              toLowercase (name scene) == toLowercase sceneName]
   if null sceneIDs
     then putStrLn $ "No scenes found with name \"" ++ sceneName ++ "\""
-    else forM_ sceneIDs (recallScene ip username)
+    else forM_ sceneIDs (recallSceneForGroup ip username groupID)
 
   where toLowercase = map toLower

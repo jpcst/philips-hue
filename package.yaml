@@ -30,6 +30,8 @@ library:
     - iso8601-time
     - lens
     - lens-aeson
+    - mtl
+    - random
     - text
     - time
     - unordered-containers
